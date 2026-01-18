@@ -1,0 +1,50 @@
+{
+  "name": "openimpute",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Browser-based DNA imputation tool using 1000 Genomes reference data",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "generate-panels": "node --max-old-space-size=24576 scripts/convert_vcf_YAZL.js",
+    "merge-panels": "node scripts/merge_FULLY_STREAMING.js"
+  },
+  "dependencies": {
+    "@zip.js/zip.js": "^2.7.52",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "yazl": "^2.5.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Brendennago/OpenImpute"
+  },
+  "keywords": [
+    "dna",
+    "imputation",
+    "genomics",
+    "1000-genomes",
+    "bioinformatics"
+  ],
+  "author": "Brenden Nago",
+  "license": "AGPL-3.0-or-later"
+}
