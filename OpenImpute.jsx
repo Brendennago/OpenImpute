@@ -1325,7 +1325,7 @@ const OpenImpute = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-white mb-3">
-            OpenImpute <span className="text-purple-400">v3</span>
+            OpenImpute
           </h1>
           <p className="text-slate-300 text-lg">Fast LD-Based Genotype Imputation</p>
           <p className="text-slate-400 text-sm mt-2">
