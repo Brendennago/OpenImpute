@@ -89,7 +89,7 @@ The current panel is 1000 Genomes (about 2,500 people), filtered to MAF ≥5% (a
 
 ### Pipeline
 - Rewrite `scripts/` as a reproducible pipeline: download, QC, liftover, `bcftools norm`, MAF tiers, then bit-packed blocks plus a manifest with checksums.
-- Run it once on a rented cloud VM (a few dollars of compute), and publish versioned blocks ("Panel v2: HGDP+1kGP, 4,091 people").
+- Run it locally (no rental needed: a Mac mini M4 with 64 GB or an ROG Flow Z13 with 128 GB is plenty; disk space is the real limit, see below), and publish versioned blocks ("Panel v2: HGDP+1kGP, 4,091 people").
 - Record licences and citations in `docs/DATA_SOURCES.md`.
 
 ## Phase 3: Prove it works (weeks 3–6, runs alongside)
@@ -184,13 +184,27 @@ Imputation runs in the user's browser, so there is **no server to pay for**. You
 | Reference panel blocks (roughly 5–20 GB depending on MAF tier) | **Cloudflare R2**: 10 GB storage free, **bandwidth always free**, then ~$0.015/GB-month | **$0–$0.15/month** |
 | | or **Hugging Face Datasets**: free hosting for public datasets | Free |
 | | or **GitHub Releases** (2 GB per file, so split by chromosome) | Free |
-| Panel build | One-off cloud VM with lots of RAM, for a few hours | ~$5–20, once (or run it on your own machine) |
+| Panel build | Your own machine (Mac mini M4 64 GB or ROG Flow Z13 128 GB) | **$0**, plus an external SSD if you need more disk |
 | Custom domain (optional) | e.g. `openimpute.org` | ~$10–15/year |
 | MCP server / Skill | Runs on the user's own machine; published to npm/GitHub | Free |
 
 **Recommendation:** GitHub Pages for the app, plus Cloudflare R2 *or* Hugging Face for the panel. Avoid AWS S3 or other hosts that charge for bandwidth, because a popular launch could run up a bill there. With R2 or Hugging Face, traffic spikes cost nothing.
 
 ---
+
+## Building the panel locally
+
+There's no need to rent a cloud machine. Memory isn't the bottleneck if the pipeline streams the data (`bcftools` processes VCFs one chromosome and one record at a time, using a few GB at most). The old 24 GB Node heap came from the script holding data in memory; a streaming rewrite removes that.
+
+| | Mac mini M4 (64 GB) | ROG Flow Z13 (128 GB) |
+|---|---|---|
+| RAM | More than enough | More than enough |
+| Tooling | `brew install bcftools htslib`; runs natively | Use **WSL2 (Ubuntu)** for bcftools/htslib |
+| Best for | **The main build box**: quiet, low power, fine to leave running overnight | Faster for parallel jobs, but a laptop running flat-out for hours gets hot and loud |
+
+**The real constraint is disk.** Raw HGDP+1kGP or 1000G-30x VCFs are hundreds of GB across all chromosomes, plus intermediate files. Plan for **~0.5–1 TB free**. A fast external USB-C / Thunderbolt NVMe SSD works fine. Process one chromosome at a time and delete the intermediates afterwards to keep the peak usage down.
+
+Throughput: run 4–8 chromosomes in parallel (`xargs -P` / GNU `parallel`). Expect the full build to take hours, not days. The download is usually the slowest part.
 
 ## Suggested order of work
 1. Push the missing source (blocker)
