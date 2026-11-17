@@ -75,6 +75,37 @@ Other UX items:
 - Never present imputed results as diagnostic. Always mark them "predicted".
 - A privacy page: no analytics on DNA, no uploads, and a link to the source code.
 
+## Phase 2.5: A bigger, better reference panel (weeks 3–6)
+
+The current panel is 1000 Genomes (about 2,500 people), filtered to MAF ≥5% (about 7M variants). That limits which SNPs can be looked up at all, and how accurate rare-variant results are. Below are the openly downloadable upgrades, in order of value.
+
+### Panel options
+
+| Panel | Samples | Variants | Build | Can we redistribute it? | Notes |
+|-------|---------|----------|-------|-------------------------|-------|
+| 1000G Phase 3 (current) | ~2,500 | ~80M | GRCh37 | Yes | Low-coverage, older |
+| **1000G high-coverage 30x (NYGC)** | ~3,200 (incl. 602 trios) | ~120M+ SNVs and indels, phased | GRCh38 | Yes (open) | **Recommended next step**: more people, better calls, already phased |
+| **HGDP + 1kGP harmonised (gnomAD)** | ~4,100 | ~150M+ | GRCh38 | Yes (open) | **Best open panel**: adds about 900 people from about 80 under-represented populations, so it's more accurate for non-European users |
+| Simons Genome Diversity Project | ~300 | | GRCh38 | Yes | Small; only useful merged in for diversity |
+| HRC / TOPMed / UK Biobank | 32k–150k+ | | | **No**: access-controlled, or server-only | Can't ship these in-app. Instead, *link out* to the Michigan/TOPMed servers for users who need research-grade results |
+
+**Plan:** move to the **HGDP+1kGP harmonised panel**, with the 1000G 30x set as a fallback if phasing or QC is easier there. That's about 60% more reference people and much better coverage of African, South Asian, Middle Eastern, Oceanian and Native American ancestry.
+
+### Other ways to increase how many SNPs we can answer for
+1. **Lower the MAF cutoff.** The chunked, bit-packed block format from Phase 2.2 makes MAF ≥1% or even ≥0.5% practical, because users only download the blocks they need. That goes from about 7M variants to 15–25M.
+2. **Liftover / build handling.** Consumer files are GRCh37 and the new panels are GRCh38. Lift the panel coordinates to GRCh37 once at build time, or lift the user's file on load, so no overlap is lost to coordinate mismatch.
+3. **Fix strand and allele mismatches** (flip strand, then drop only ambiguous A/T and C/G SNPs that can't be resolved from allele frequency). Today these are probably being dropped or miscalled, which reduces the anchor SNPs available.
+4. **Map rsIDs through dbSNP merge history.** Many chip rsIDs have been merged or renamed, and a lookup table lets a search for an old or new rsID find the variant. This is cheap and recovers a lot.
+5. **Support indels and multi-allelic sites.** The current approach is mostly biallelic SNPs.
+6. **Use a real genetic map** (HapMap or 1000G-derived cM maps) instead of one constant recombination rate. This improves weighting, so more SNPs reach "High" confidence.
+7. **Use more of the user's own data.** Accept more vendors (MyHeritage, FTDNA, Living DNA) and allow **merging two kits** (e.g. 23andMe + Ancestry). Different chips overlap only partly, so combining kits gives many more anchor SNPs.
+8. **Report coverage honestly.** For any lookup, say: "on your chip", "predicted (High/Med/Low)", or "not in the reference panel". The benchmark from Phase 3 should be split by panel and MAF tier, so it's clear what each upgrade actually buys.
+
+### Pipeline work
+- Rewrite `scripts/` as a reproducible pipeline: download, QC, liftover, normalise (`bcftools norm`), MAF tiers, then bit-packed region blocks plus a manifest with checksums.
+- Run it once (on a cloud VM; it needs more RAM than a laptop) and publish the blocks to R2 or Hugging Face with a version number, so the app can say "Panel v2 (HGDP+1kGP, 4,091 people)".
+- Record the data licence and citations for each panel in `docs/DATA_SOURCES.md`.
+
 ## Phase 3: Prove it works (weeks 3–5, runs alongside Phase 2)
 
 - [ ] **Accuracy benchmark:** take 1000G samples, mask them down to the 23andMe v5 / Ancestry v2 SNP sets, impute the hidden SNPs with that sample left out of the panel (leave-one-out), and report concordance by MAF bin and by ancestry.
@@ -152,6 +183,7 @@ Secondary angles: "Genotype imputation running entirely in your browser" (techni
 1. Push the missing source (blocker)
 2. Build/strand check + CI
 3. Hosted PWA + prebuilt chunked panel + Web Worker
+3b. Panel v2: HGDP+1kGP, liftover, strand fixes, rsID merge map, lower MAF tiers
 4. Guided 3-step UX with gene/trait search and the demo genome
 5. Benchmark + confidence calibration
 6. `@openimpute/core` → MCP server + `.mcpb` → Agent Skill
