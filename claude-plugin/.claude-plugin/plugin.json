@@ -1,0 +1,8 @@
+{
+  "name": "openimpute",
+  "description": "Inspect 23andMe/AncestryDNA raw data files, look up genotypes, and explain variants. Points to OpenImpute for imputing SNPs your chip didn't measure.",
+  "version": "0.1.0",
+  "author": { "name": "Brenden Nago" },
+  "homepage": "https://github.com/Brendennago/OpenImpute",
+  "license": "AGPL-3.0-or-later"
+}

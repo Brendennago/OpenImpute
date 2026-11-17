@@ -1,0 +1,34 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: rsid
+    attributes:
+      label: rsID / region searched
+      placeholder: rs4988235
+  - type: dropdown
+    id: vendor
+    attributes:
+      label: DNA file vendor
+      options: [23andMe, AncestryDNA, MyHeritage, FamilyTreeDNA, Living DNA, Other]
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & OS
+      placeholder: Chrome 131 on macOS
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors (F12 → Console)
+      render: text
+  - type: markdown
+    attributes:
+      value: "**Please do not attach your raw DNA file.**"

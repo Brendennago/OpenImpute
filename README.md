@@ -1,106 +1,114 @@
+<div align="center">
+
 # OpenImpute
-A user-friendly, browser-based DNA imputation tool for analyzing direct-to-consumer genetic data (23andMe, Ancestry) locally.
 
-## What This Does
+**Your DNA chip measured ~600,000 SNPs. OpenImpute predicts millions more, and shows you how it did it.**
 
-You upload your raw DNA file (23andMe, Ancestry, etc.) and a reference panel. When you search for a SNP you don't have, it predicts your genotype based on the SNPs you do have nearby.
+Genotype imputation for 23andMe / AncestryDNA raw data, running in your browser.
+No command line, no account, no server queue.
 
-## How The Imputation Works
+[**▶ Try it in your browser**](https://brendennago.github.io/OpenImpute/) · [How it works](#how-the-imputation-works) · [Roadmap](docs/ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
-This uses a haplotype matching approach loosely based on the Li & Stephens model:
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
+![Status](https://img.shields.io/badge/status-early%20development-orange)
 
-1. Find the target SNP's position in the reference panel
-2. Load genotypes for a 5Mb window around the target (not the whole chromosome)
-3. Find your SNPs within that window that overlap with the reference panel
-4. For each reference sample, calculate how well your genotypes match theirs across the flanking variants
-5. Weight matches by distance (closer SNPs matter more, using exponential decay based on recombination rate)
-6. Each reference sample "votes" for the target genotype, weighted by how well they match you
-7. Return the most likely genotype with a confidence score
+</div>
 
-For hemizygous chromosomes (X/Y in males), it detects sex by checking heterozygosity rate on chrX and returns single alleles instead of diploid calls.
+---
 
-## ⚠️ Speed Warning
+## What it does
 
-**This is slow.** Here's what happens when you search for a SNP:
+Consumer DNA tests only genotype a small, fixed set of markers. Most variants you read about (in papers, on SNPedia, in dbSNP) **aren't on your chip**. OpenImpute fills those gaps. Your measured SNPs are compared against a public reference panel of real human genomes (1000 Genomes). The tool finds the people whose DNA best matches yours around the variant, and predicts your genotype from theirs.
 
-1. Search through 23 chromosome metadata files to find which chromosome has your SNP
-2. Open the stored ZIP blob (hundreds of MB)
-3. Stream through the compressed genotypes file looking for the specific line numbers needed
-4. Decompress and parse ~10,000+ genotype lines for the 5Mb window
-5. Run the matching algorithm across ~2,500 reference samples
+1. **Load** your raw data file (`.txt` or `.zip` from 23andMe, AncestryDNA, and similar).
+2. **Search** for any rsID.
+3. **Get** the genotype, labelled *measured* or *imputed*, with genotype probabilities and a confidence score.
 
-First search on a chromosome takes 10-30+ seconds depending on your machine. Subsequent searches in the same region are faster since data is cached in memory.
+## How it compares
 
-The reference panel has ~7 million variants. The genotypes file alone is 17GB uncompressed. There's no way around the decompression time in a browser.
+| | Consumer report sites | Michigan / TOPMed servers | DIY Beagle / Minimac | **OpenImpute** |
+|---|---|---|---|---|
+| Imputes SNPs your chip missed | ✗ | ✓ | ✓ | ✓ |
+| Setup | none | account, VCF conversion, QC, queue | command line, panels, phasing | **none** |
+| Time to first answer | instant | hours | hours | **seconds to minutes** |
+| Shows how each call was made | ✗ | ✗ | partly | **✓** (planned: full breakdown) |
+| Free & open source | varies | free service | ✓ | ✓ |
 
-## ⚠️ Range Search Warning
+OpenImpute is **not** a replacement for the Michigan or TOPMed servers if you need research-grade, genome-wide imputation. It's built for looking up specific variants quickly and transparently.
 
-The "Range Search" tab exists but **has not been tested with the current architecture** and is probably broken. Use single SNP search only for now.
+## How the imputation works
 
-## Features
+A haplotype-matching approach, loosely based on the Li & Stephens model:
 
-- Runs 100% offline after initial setup
-- Stores reference panel metadata in IndexedDB (~200MB)
-- Loads genotypes on-demand from stored ZIP (no 17GB memory requirement)
-- Detects male/female for proper X chromosome handling
-- Uses up to 50 flanking variants for imputation
-- Shows confidence scores and genotype probabilities
+1. Find the target SNP's position in the reference panel.
+2. Load reference genotypes for a 5 Mb window around it.
+3. Find your SNPs in that window that overlap with the panel.
+4. Score how well each of the ~2,500 reference samples matches you across those flanking variants.
+5. Weight each match by distance (closer SNPs matter more, with exponential decay based on recombination rate).
+6. Each reference sample "votes" for the target genotype, weighted by how well it matches.
+7. Return the most likely genotype with a confidence score and the full genotype probabilities.
 
-## Reference Panel Tiers
+For chrX in males (sex is inferred from chrX heterozygosity), it returns hemizygous single-allele calls.
 
-- **Common** (~7M variants, MAF ≥5%) - Recommended, ~500MB ZIP
-- **Extended** (~12M variants, MAF ≥1%) - Larger, slower
-- **Full** (all variants, no MAF filter) - Exists but completely untested, probably huge and may not work
+## Reference panels
 
-## Installation
+| Tier | Variants | Filter | Notes |
+|------|----------|--------|-------|
+| **Common** | ~7M | MAF ≥ 5% | Recommended, ~500 MB ZIP |
+| Extended | ~12M | MAF ≥ 1% | Larger, slower |
+| Full | all | none | Untested |
+
+A larger, more diverse panel (HGDP + 1000 Genomes, ~4,100 people) with lower MAF tiers is planned. See the [roadmap](docs/ROADMAP.md#phase-25-a-bigger-better-reference-panel-weeks-3-6).
+
+## Current limitations
+
+- **Speed:** the first search on a chromosome takes 10–30 s while that region is decompressed. Later searches nearby are fast. Splitting the panel into small chunks is planned and should cut this to seconds.
+- **Range Search** is experimental and probably broken. Use single-SNP search for now.
+- Accuracy depends on how many of your SNPs fall near the target. Some regions (e.g. CYP2D6) are poorly covered by consumer chips, and imputation there is unreliable whatever method you use.
+- A formal accuracy benchmark is in progress.
+- **Not medical advice.** Imputed genotypes are predictions.
+
+## Supported files
+
+```
+rsid    chromosome    position    genotype
+rs123   1             12345       AG
+```
+
+23andMe (v3–v5), AncestryDNA, and similar tab-separated raw data files (GRCh37).
+
+## Running locally (developers)
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Generating Reference Panels
+Or click **Code → Codespaces → Create codespace** on GitHub to get a ready-to-run environment.
 
-### Step 1: Convert VCFs to per-chromosome ZIPs
+### Building reference panels yourself
 
-```bash
-node --max-old-space-size=24576 scripts/convert_vcf.js
+You don't need to do this to use the app. It's only for regenerating or extending the panel. See [`scripts/panel/README.md`](scripts/panel/README.md) for the `bcftools`-based pipeline (macOS or Linux/WSL2, ~0.5–1 TB free disk).
+
+## Use it with Claude
+
+OpenImpute ships a Claude Code plugin with an Agent Skill that can read your raw DNA file, summarise it, look up genotypes by rsID or region, and explain variants with sources:
+
+```
+/plugin marketplace add Brendennago/OpenImpute
+/plugin install openimpute@openimpute
 ```
 
-This automatically downloads each chromosome's VCF from NCBI (if not already cached in `reference_panel/`), filters variants, and creates per-chromosome ZIPs for each tier in `public/reference_panels_by_chr/`.
+Then ask: *"Summarise my 23andMe file at ~/Downloads/genome.txt and tell me my genotype at rs4988235."* An MCP server with full imputation is planned.
 
-Downloads are cached, so if you run it again it skips already-downloaded chromosomes.
+## Contributing
 
-### Step 2: Merge into final ZIPs
+Contributions are very welcome, especially new vendor file parsers, gene/trait lookup entries, visualisations, and benchmark work. See [CONTRIBUTING.md](CONTRIBUTING.md) and issues labelled `good first issue`.
 
-```bash
-node scripts/merge_panels.js
-```
+## Data & citations
 
-This combines all per-chromosome ZIPs into the final reference panels in `public/reference_panels/`.
-
-Output:
-- `common_variants.zip` - ~500MB compressed, ~7M variants (MAF ≥5%)
-- `extended_variants.zip` - ~800MB compressed, ~12M variants (MAF ≥1%)
-- `full_variants.zip` - all variants, no MAF filter
-
-## File Format Support
-
-Accepts raw DNA files with this format:
-```
-rsid    chromosome    position    genotype
-rs123   1             12345       AG
-```
-
-Works with 23andMe v5, AncestryDNA, and similar formats.
-
-## Limitations
-
-- Imputation accuracy depends heavily on how many of your SNPs overlap with the reference panel in the target region
-- Some regions (like CYP2D6) are poorly covered on consumer chips, making imputation unreliable regardless of method
-- This is not a replacement for proper imputation servers like Michigan or TOPMed if you need research-grade results
-- Memory usage can spike when loading chromosome data
+Reference data comes from the 1000 Genomes Project. See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
 
 ## License
 
-AGPL-3.0-or-later
+Code: [AGPL-3.0-or-later](LICENSE).

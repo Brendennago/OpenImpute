@@ -1,0 +1,11 @@
+{
+  "name": "openimpute",
+  "owner": { "name": "Brenden Nago" },
+  "plugins": [
+    {
+      "name": "openimpute",
+      "source": "./claude-plugin",
+      "description": "Inspect consumer raw DNA files and explain variants; impute missing SNPs with OpenImpute."
+    }
+  ]
+}
