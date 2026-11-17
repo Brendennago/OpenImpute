@@ -35,9 +35,14 @@
 
 ## Phase 2: Zero setup (weeks 2–4)
 
-### 2.1 Host it
-- Deploy the app on **Vercel** (Hobby plan, free) at `openimpute.vercel.app`: connect the GitHub repo, and every push to `main` auto-deploys. Pull requests get preview URLs.
-- **Keep the panel files off Vercel.** Hobby includes ~100 GB/month of bandwidth, which panel downloads would burn through after a few hundred users. Serve the panel from Cloudflare R2 or Hugging Face instead, and set CORS on that bucket to allow `openimpute.vercel.app`.
+### 2.1 Host it on GitHub (no separate site)
+- **App:** **GitHub Pages** at `https://brendennago.github.io/OpenImpute/`. It's built and deployed by `.github/workflows/deploy-pages.yml` on every push to `main`. It's a github.io address, which people already trust, and it shows in the repo's "About" sidebar right next to the Star button.
+  - One-time setup: repo **Settings → Pages → Source: GitHub Actions**, and put the URL in the repo's "About → Website" field.
+- **Reference panel:** two options, both free:
+  1. **Release assets (simplest, all on GitHub):** attach the panel ZIPs to a GitHub Release (2 GB max per file, so split per chromosome or per tier). Users click download, then drag the file into the app. That's how the app works today anyway.
+  2. **Hugging Face Datasets (best experience):** host the chunked blocks there. Hugging Face serves files with CORS headers, so the app can fetch just the blocks it needs automatically, with no manual download. Link the dataset from the README.
+  - Why not fetch directly from Releases? GitHub release downloads don't allow cross-origin browser requests, so the app can't load them in the background. And GitHub Pages itself is meant for sites under ~1 GB, which is too small for a multi-GB panel.
+- **Developer path:** an "Open in GitHub Codespaces" button (with a `.devcontainer`), so contributors can run it in one click.
 
 ### 2.2 Prebuilt, chunked reference panel (the biggest single change)
 - Build the panel once and host it as static files. Users never build it themselves.
@@ -181,15 +186,14 @@ Imputation runs in the user's browser, so there is **no server to pay for**. You
 
 | Item | Option | Cost |
 |------|--------|------|
-| Web app | **Vercel Hobby** (`openimpute.vercel.app`) | **Free** (the app itself is a few MB, well within limits) |
-| Reference panel blocks (roughly 5–20 GB depending on MAF tier) | **Cloudflare R2**: 10 GB storage free, **bandwidth always free**, then ~$0.015/GB-month | **$0–$0.15/month** |
-| | or **Hugging Face Datasets**: free hosting for public datasets | Free |
-| | or **GitHub Releases** (2 GB per file, so split by chromosome) | Free |
+| Web app | **GitHub Pages** (`brendennago.github.io/OpenImpute`) | **Free** |
+| Reference panel blocks (roughly 5–20 GB depending on MAF tier) | **GitHub Releases** (2 GB per file; users download, then drag in) | Free |
+| | or **Hugging Face Datasets** (loaded automatically) | Free |
 | Panel build | Your own machine (Mac mini M4 64 GB or ROG Flow Z13 128 GB) | **$0**, plus an external SSD if you need more disk |
-| Domain | `openimpute.vercel.app` | **Free** (a custom domain can be added later if wanted) |
+| Domain | `brendennago.github.io/OpenImpute` | **Free** |
 | MCP server / Skill | Runs on the user's own machine; published to npm/GitHub | Free |
 
-**Recommendation:** Vercel for the app, plus Cloudflare R2 *or* Hugging Face for the panel. Avoid AWS S3 or other hosts that charge for bandwidth, because a popular launch could run up a bill there. With R2 or Hugging Face, traffic spikes cost nothing.
+**Recommendation:** GitHub Pages for the app, plus GitHub Release assets (manual download) or Hugging Face (automatic loading) for the panel.
 
 ---
 
@@ -218,6 +222,6 @@ Throughput: run 4–8 chromosomes in parallel (`xargs -P` / GNU `parallel`). Exp
 8. README/GIF/release → soft launch → Show HN → AI directories → awesome lists
 
 ## Open questions
-- Use R2 or Hugging Face for the panel?
+- Release assets only, or also Hugging Face for automatic loading?
 - Clinical variants at launch, or traits and genes only?
 - What licence for the curated gene/trait notes (separate CC-BY data, or AGPL)?
