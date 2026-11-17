@@ -36,7 +36,8 @@
 ## Phase 2: Zero setup (weeks 2–4)
 
 ### 2.1 Host it
-- Deploy the app as a static site on **GitHub Pages or Cloudflare Pages** (free).
+- Deploy the app on **Vercel** (Hobby plan, free) at `openimpute.vercel.app`: connect the GitHub repo, and every push to `main` auto-deploys. Pull requests get preview URLs.
+- **Keep the panel files off Vercel.** Hobby includes ~100 GB/month of bandwidth, which panel downloads would burn through after a few hundred users. Serve the panel from Cloudflare R2 or Hugging Face instead, and set CORS on that bucket to allow `openimpute.vercel.app`.
 
 ### 2.2 Prebuilt, chunked reference panel (the biggest single change)
 - Build the panel once and host it as static files. Users never build it themselves.
@@ -180,15 +181,15 @@ Imputation runs in the user's browser, so there is **no server to pay for**. You
 
 | Item | Option | Cost |
 |------|--------|------|
-| Web app | GitHub Pages or Cloudflare Pages | **Free** |
+| Web app | **Vercel Hobby** (`openimpute.vercel.app`) | **Free** (the app itself is a few MB, well within limits) |
 | Reference panel blocks (roughly 5–20 GB depending on MAF tier) | **Cloudflare R2**: 10 GB storage free, **bandwidth always free**, then ~$0.015/GB-month | **$0–$0.15/month** |
 | | or **Hugging Face Datasets**: free hosting for public datasets | Free |
 | | or **GitHub Releases** (2 GB per file, so split by chromosome) | Free |
 | Panel build | Your own machine (Mac mini M4 64 GB or ROG Flow Z13 128 GB) | **$0**, plus an external SSD if you need more disk |
-| Custom domain (optional) | e.g. `openimpute.org` | ~$10–15/year |
+| Domain | `openimpute.vercel.app` | **Free** (a custom domain can be added later if wanted) |
 | MCP server / Skill | Runs on the user's own machine; published to npm/GitHub | Free |
 
-**Recommendation:** GitHub Pages for the app, plus Cloudflare R2 *or* Hugging Face for the panel. Avoid AWS S3 or other hosts that charge for bandwidth, because a popular launch could run up a bill there. With R2 or Hugging Face, traffic spikes cost nothing.
+**Recommendation:** Vercel for the app, plus Cloudflare R2 *or* Hugging Face for the panel. Avoid AWS S3 or other hosts that charge for bandwidth, because a popular launch could run up a bill there. With R2 or Hugging Face, traffic spikes cost nothing.
 
 ---
 
@@ -199,7 +200,7 @@ There's no need to rent a cloud machine. Memory isn't the bottleneck if the pipe
 | | Mac mini M4 (64 GB) | ROG Flow Z13 (128 GB) |
 |---|---|---|
 | RAM | More than enough | More than enough |
-| Tooling | `brew install bcftools htslib`; runs natively | Use **WSL2 (Ubuntu)** for bcftools/htslib |
+| Tooling | `brew install bcftools htslib`; runs natively | **WSL2 (already set up)**: `sudo apt install bcftools tabix`. Keep data on the WSL ext4 filesystem, not `/mnt/c`, which is much slower |
 | Best for | **The main build box**: quiet, low power, fine to leave running overnight | Faster for parallel jobs, but a laptop running flat-out for hours gets hot and loud |
 
 **The real constraint is disk.** Raw HGDP+1kGP or 1000G-30x VCFs are hundreds of GB across all chromosomes, plus intermediate files. Plan for **~0.5–1 TB free**. A fast external USB-C / Thunderbolt NVMe SSD works fine. Process one chromosome at a time and delete the intermediates afterwards to keep the peak usage down.
