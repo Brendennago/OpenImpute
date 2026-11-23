@@ -38,7 +38,8 @@ At the end it writes `out/manifest.json` and `out/SHA256SUMS`.
 ## Status / next steps
 
 - [ ] Verify the URLs (`check`) and run chr22 end to end
-- [ ] **Genome build:** outputs are GRCh38, but consumer files are GRCh37. The app should match user SNPs to the panel **by rsID** (with an allele/strand check) rather than by position, or a liftover step should be added here.
+- [x] **Genome build:** outputs are GRCh38 and consumer files are GRCh37. Solved in `core/`, which matches user SNPs to the panel by rsID, with allele/strand checks.
+- [ ] Use the output directly: `node core/bin/openimpute.js impute genome.zip --panel $WORK_DIR/out/common rs...`
 - [ ] Convert the outputs into the app's format (currently the per-chromosome ZIPs from the original `convert_vcf` script), and later into bit-packed region blocks (see `docs/ROADMAP.md`, Phase 2.2)
 - [ ] HGDP + 1KG support: set `PANEL=hgdp1kg` and `HGDP1KG_URL` once the gnomAD path is confirmed
 - [ ] Indels

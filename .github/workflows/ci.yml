@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Engine tests
+        working-directory: core
+        run: npm test
+      - name: Plugin engine copy is up to date
+        run: |
+          node core/scripts/sync-plugin.js
+          git diff --exit-code -- claude-plugin/ || (echo "Run 'npm run sync-plugin' in core/ and commit" && exit 1)
+      - name: Simulated accuracy benchmark
+        working-directory: core
+        run: node bin/openimpute.js bench-sim --samples 3 --targets 200

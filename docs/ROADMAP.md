@@ -8,6 +8,18 @@
 
 ---
 
+## Progress (Nov 2026)
+
+Done on the `claude/optimistic-dijkstra-y5raj3` branch:
+- ✅ GitHub Pages deploy workflow, CI workflow, Codespaces devcontainer, issue templates, CONTRIBUTING
+- ✅ README rewritten around the new positioning
+- ✅ `scripts/panel/`: streaming bcftools panel builder (1000G 30x / HGDP+1KG, MAF tiers, rsIDs)
+- ✅ **`core/`: standalone engine** (diploid Li & Stephens HMM, rsID matching, so the GRCh37/38 mismatch is solved; strand fixing; `.zip` input; CLI; leave-one-out benchmark; 13 tests)
+- ✅ Claude plugin + Skill with the engine bundled (real imputation, not just lookups)
+
+Still blocked on the original `src/` (React app) being pushed: wiring `core/` into the web UI, and the Pages deploy.
+Next with no blockers: build chr22 with `scripts/panel`, run `core benchmark` on it with real 23andMe/Ancestry SNP sets, and publish `docs/BENCHMARK.md`.
+
 ## 0. Current state (audit, Nov 2026)
 
 | # | Problem | Impact |
@@ -108,8 +120,8 @@ A technical audience will judge the project on this page. It's also the core of 
 
 ## Phase 4: AI integration (weeks 5–7)
 
-### 4.1 `@openimpute/core`
-Split out the parsers, block reader, imputation and sex detection into one package that runs in both the browser and Node.
+### 4.1 `@openimpute/core` ✅
+Done: see [`core/`](../core/README.md). Remaining: the bit-packed block reader for the browser, and wiring it into the web app.
 
 ### 4.2 MCP server: `openimpute-mcp`
 This lets Claude Desktop, Claude Code, Cursor and other MCP clients work with a user's genome file directly.

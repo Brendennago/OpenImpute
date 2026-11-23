@@ -1,0 +1,21 @@
+{
+  "name": "@openimpute/core",
+  "version": "0.1.0",
+  "description": "Genotype imputation for consumer raw DNA files (23andMe, AncestryDNA) against a reference panel. Runs in Node and the browser.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "exports": {
+    ".": "./src/index.js",
+    "./node": "./src/node.js"
+  },
+  "bin": { "openimpute": "./bin/openimpute.js" },
+  "files": ["src", "bin"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "bench:sim": "node bin/openimpute.js bench-sim",
+    "sync-plugin": "node scripts/sync-plugin.js"
+  },
+  "repository": { "type": "git", "url": "https://github.com/Brendennago/OpenImpute", "directory": "core" },
+  "keywords": ["dna", "imputation", "genomics", "23andme", "snp", "haplotype"]
+}
